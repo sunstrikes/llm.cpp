@@ -6,7 +6,6 @@ INCLUDES =
 CFLAGS_COND = -march=native
 
 # Find nvcc
-<<<<<<< HEAD
 SHELL_UNAME = $(shell uname)
 REMOVE_FILES = rm -f
 OUTPUT_FILE = -o $@
@@ -50,21 +49,10 @@ ifneq ($(OS), Windows_NT)
 
   # Function to test if the compiler accepts a given flag.
   define check_and_add_flag
-=======
-NVCC := $(shell which nvcc 2>/dev/null)
-
-# NVCC flags
-NVCC_FLAGS = -O3 --use_fast_math
-NVCC_LDFLAGS = -lcublas -lcublasLt
-
-# Function to test if the compiler accepts a given flag.
-define check_and_add_flag
->>>>>>> karpathy-master
     $(eval FLAG_SUPPORTED := $(shell printf "int main() { return 0; }\n" | $(CC) $(1) -x c - -o /dev/null 2>/dev/null && echo 'yes'))
     ifeq ($(FLAG_SUPPORTED),yes)
         CFLAGS += $(1)
     endif
-<<<<<<< HEAD
   endef
 
   # Check each flag and add it if supported
@@ -139,12 +127,6 @@ ifeq ($(USE_CUDNN), 1)
 else
   $(info → cuDNN is manually disabled by default, run make with `USE_CUDNN=1` to try to enable)
 endif
-=======
-endef
-
-# Check each flag and add it if supported
-$(foreach flag,$(CFLAGS_COND),$(eval $(call check_and_add_flag,$(flag))))
->>>>>>> karpathy-master
 
 # Check if OpenMP is available
 # This is done by attempting to compile an empty file with OpenMP flags
@@ -156,7 +138,6 @@ $(foreach flag,$(CFLAGS_COND),$(eval $(call check_and_add_flag,$(flag))))
 ifeq ($(NO_OMP), 1)
   $(info OpenMP is manually disabled)
 else
-<<<<<<< HEAD
   ifneq ($(OS), Windows_NT)
   # Detect if running on macOS or Linux
     ifeq ($(SHELL_UNAME), Darwin)
@@ -187,41 +168,10 @@ else
       else
         $(info ✗ OpenMP not found)
       endif
-=======
-  # Detect if running on macOS or Linux
-  ifeq ($(shell uname), Darwin)
-    # Check for Homebrew's libomp installation in different common directories
-    ifeq ($(shell [ -d /opt/homebrew/opt/libomp/lib ] && echo "exists"), exists)
-      # macOS with Homebrew on ARM (Apple Silicon)
-      CFLAGS += -Xclang -fopenmp -DOMP
-      LDFLAGS += -L/opt/homebrew/opt/libomp/lib
-      LDLIBS += -lomp
-      INCLUDES += -I/opt/homebrew/opt/libomp/include
-      $(info OpenMP found, compiling with OpenMP support)
-    else ifeq ($(shell [ -d /usr/local/opt/libomp/lib ] && echo "exists"), exists)
-      # macOS with Homebrew on Intel
-      CFLAGS += -Xclang -fopenmp -DOMP
-      LDFLAGS += -L/usr/local/opt/libomp/lib
-      LDLIBS += -lomp
-      INCLUDES += -I/usr/local/opt/libomp/include
-      $(info OpenMP found, compiling with OpenMP support)
-    else
-      $(warning OpenMP not found, skipping OpenMP support)
-    endif
-  else
-    # Check for OpenMP support in GCC or Clang on Linux
-    ifeq ($(shell echo | $(CC) -fopenmp -x c -E - > /dev/null 2>&1; echo $$?), 0)
-      CFLAGS += -fopenmp -DOMP
-      LDLIBS += -lgomp
-      $(info OpenMP found, compiling with OpenMP support)
-    else
-      $(warning OpenMP not found, skipping OpenMP support)
->>>>>>> karpathy-master
     endif
   endif
 endif
 
-<<<<<<< HEAD
 # Check if OpenMPI and NCCL are available, include them if so, for multi-GPU training
 ifeq ($(NO_MULTI_GPU), 1)
   $(info → Multi-GPU (OpenMPI + NCCL) is manually disabled)
@@ -259,17 +209,12 @@ endif
 
 # PHONY means these targets will always be executed
 .PHONY: all train_gpt2 test_gpt2 train_gpt2cu test_gpt2cu train_gpt2fp32cu test_gpt2fp32cu profile_gpt2cu
-=======
-# PHONY means these targets will always be executed
-.PHONY: all train_gpt2 test_gpt2 train_gpt2cu test_gpt2cu train_gpt2fp32cu test_gpt2fp32cu
->>>>>>> karpathy-master
 
 # Add targets
 TARGETS = train_gpt2 test_gpt2
 
 # Conditional inclusion of CUDA targets
 ifeq ($(NVCC),)
-<<<<<<< HEAD
     $(info ✗ nvcc not found, skipping GPU/CUDA builds)
 else
     $(info ✓ nvcc found, including GPU/CUDA support)
@@ -306,36 +251,3 @@ profile_gpt2cu: profile_gpt2.cu $(NVCC_CUDNN)
 
 clean:
 	$(REMOVE_FILES) $(TARGETS) $(NVCC_CUDNN)
-=======
-    $(info nvcc not found, skipping CUDA builds)
-else
-    $(info nvcc found, including CUDA builds)
-    TARGETS += train_gpt2cu test_gpt2cu train_gpt2fp32cu test_gpt2fp32cu
-endif
-
-all: $(TARGETS)
-
-train_gpt2: train_gpt2.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(LDFLAGS) $< $(LDLIBS) -o $@
-
-test_gpt2: test_gpt2.c
-	$(CC) $(CFLAGS) $(INCLUDES) $(LDFLAGS) $< $(LDLIBS) -o $@
-
-train_gpt2cu: train_gpt2.cu
-	$(NVCC) $(NVCC_FLAGS) $< $(NVCC_LDFLAGS) -o $@
-
-train_gpt2fp32cu: train_gpt2_fp32.cu
-	$(NVCC) $(NVCC_FLAGS) $< $(NVCC_LDFLAGS) -o $@
-
-test_gpt2cu: test_gpt2.cu
-	$(NVCC) $(NVCC_FLAGS) $< $(NVCC_LDFLAGS) -o $@
-
-test_gpt2fp32cu: test_gpt2_fp32.cu
-	$(NVCC) $(NVCC_FLAGS) $< $(NVCC_LDFLAGS) -o $@
-
-profile_gpt2cu: profile_gpt2.cu
-	$(NVCC) $(NVCC_FLAGS) -lineinfo $< $(NVCC_LDFLAGS) -o $@
-
-clean:
-	rm -f train_gpt2 test_gpt2 train_gpt2cu train_gpt2fp32cu test_gpt2cu test_gpt2fp32cu
->>>>>>> karpathy-master
