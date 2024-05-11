@@ -26,7 +26,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-import torch._inductor.config as config
+#import torch._inductor.config as config
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
 
@@ -182,7 +182,8 @@ class GPT(nn.Module):
         sd_keys = [k for k in sd_keys if not k.endswith('.attn.bias')] # discard this mask / buffer, not a param
 
         # init a huggingface/transformers model
-        model_hf = GPT2LMHeadModel.from_pretrained(model_type)
+        print(model_type)
+        model_hf = GPT2LMHeadModel.from_pretrained(model_type, local_files_only=False)
         sd_hf = model_hf.state_dict()
 
         # copy while ensuring all of the parameters are aligned and match in names and shapes
@@ -539,7 +540,8 @@ if __name__ == "__main__":
 
     # init the optimizer
     adam_use_fused = device == "cuda" # only works on CUDA (?)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, fused=adam_use_fused)
+    #optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, fused=adam_use_fused)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
     if device == "cuda":
         torch.cuda.reset_peak_memory_stats()
